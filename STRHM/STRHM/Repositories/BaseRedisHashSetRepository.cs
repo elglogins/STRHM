@@ -6,15 +6,30 @@ using StackExchange.Redis;
 namespace STRHM.Repositories
 {
     public abstract class BaseRedisHashSetRepository<T>
+        where T : class
     {
         private static ConfigurationOptions _configurationOptions;
+        protected readonly int Database;
+        protected readonly string KeyNamespace;
 
-        public BaseRedisHashSetRepository()
+        public BaseRedisHashSetRepository(string keyNamespace, int database)
         {
             var conString = ConfigurationManager.ConnectionStrings["RedisConnectionString"].ConnectionString;
             _configurationOptions = new ConfigurationOptions();
             _configurationOptions.EndPoints.Add(conString);
+            Database = database;
+            KeyNamespace = keyNamespace;
         }
+
+        #region Methods
+
+        public void Save(string key, T model)
+        {
+            var database = GetConnection.GetDatabase(Database);
+            //TODO
+        }
+
+        #endregion
 
         #region Connection
 

@@ -1,7 +1,10 @@
-﻿################################################################################
+################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
 /STRHM/packages/StackExchange.Redis.1.2.6
 /STRHM/STRHM/obj/Debug
 /STRHM/.vs/STRHM/v15
+STRHM/STRHM.Console/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+STRHM/STRHM.Console/obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+STRHM/STRHM.Console/obj/
