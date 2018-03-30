@@ -29,10 +29,9 @@ namespace STRHM.Collections
                 return default(TK);
 
             if (value.ToString().IsJson())
-            {
                 return JsonConvert.DeserializeObject<TK>(value.ToString());
-            }
 
+            // https://msdn.microsoft.com/en-us/library/system.componentmodel.typedescriptor(v=vs.110).aspx
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(TK));
             return (TK)converter.ConvertFromString(null, CultureInfo.InvariantCulture, value.ToString());
         }
