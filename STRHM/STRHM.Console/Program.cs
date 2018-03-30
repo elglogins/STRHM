@@ -40,10 +40,14 @@ namespace STRHM.Console
 
             var redisBookDictionary = bookRepository.HashGet(book.SerialNumber,
                 x => x.Title,
-                x => x.SerialNumber);
+                x => x.SerialNumber,
+                x => x.Rating,
+                x => x.Author);
 
-            System.Console.WriteLine(redisBookDictionary[c => c.SerialNumber]);
-            System.Console.WriteLine(redisBookDictionary[c => c.Title]);
+            var rating = redisBookDictionary.Get<int>(x => x.Rating);
+            var serialNumber = redisBookDictionary.Get<int>(x => x.SerialNumber);
+            var author = redisBookDictionary.Get<AuthorModel>(x => x.Author);
+
             System.Console.Read();
         }
     }
