@@ -11,7 +11,7 @@ namespace STRHM.Console.Models
 
         public DateTime PublishedOn { get; set; }
 
-        public bool IsFamilyFriendly { get; set; }
+        public bool Featured { get; set; }
 
         public int Rating { get; set; }
 
