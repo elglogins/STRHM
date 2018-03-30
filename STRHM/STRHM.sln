@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STRHM", "STRHM\STRHM.csproj", "{574ECC1F-2B07-4DAF-AC88-02A39B95B373}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{574ECC1F-2B07-4DAF-AC88-02A39B95B373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{574ECC1F-2B07-4DAF-AC88-02A39B95B373}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{574ECC1F-2B07-4DAF-AC88-02A39B95B373}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{574ECC1F-2B07-4DAF-AC88-02A39B95B373}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CFD0894D-BF63-4214-A2CB-5C633BC09983}
+	EndGlobalSection
+EndGlobal
