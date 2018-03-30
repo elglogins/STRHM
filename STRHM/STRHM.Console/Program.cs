@@ -19,6 +19,7 @@ namespace STRHM.Console
             };
 
             bookRepository.Save(book.SerialNumber, book);
+            var redisBook = bookRepository.Get(book.SerialNumber);
         }
     }
 }

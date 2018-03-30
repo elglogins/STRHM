@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Dynamic;
 using System.Linq;
+using Newtonsoft.Json;
 using StackExchange.Redis;
 
 namespace STRHM.Repositories
@@ -40,9 +42,26 @@ namespace STRHM.Repositories
             database.HashSet(KeyNamespace + key, Map(model));
         }
 
+        public T Get(string key)
+        {
+            var database = GetConnection.GetDatabase(Database);
+            return Map(database.HashGet(KeyNamespace + key, ObjectPropertyNames));
+        }
+
         #endregion
 
         #region Privates
+
+        private RedisValue[] ObjectPropertyNames
+        {
+            get
+            {
+                var data = typeof(T).GetProperties()
+                    .Select(c => (RedisValue)c.Name)
+                    .ToArray();
+                return data;
+            }
+        }
 
         /// <summary>
         /// Maps object into HashEntry values array
@@ -52,17 +71,43 @@ namespace STRHM.Repositories
         private HashEntry[] Map(T obj)
         {
             var values = new List<HashEntry>();
-            foreach (var property in typeof(T).GetProperties())
+            foreach (var propertyName in ObjectPropertyNames)
             {
-                var objectProperty = obj.GetType().GetProperty(property.Name);
-
+                var objectProperty = obj.GetType().GetProperties().First(pi => pi.Name == propertyName);
                 if (objectProperty == null)
-                    throw new Exception($"Couldn't get object property named {property.Name}");
+                    throw new Exception($"Couldn't get object property named {propertyName}");
 
                 var value = (objectProperty.GetValue(obj, null) ?? String.Empty).ToString();
-                values.Add(new HashEntry(property.Name, value));
+                values.Add(new HashEntry(propertyName, value));
             }
             return values.ToArray();
+        }
+
+        /// <summary>
+        /// Maps redis values array into our generic model
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        private T Map(RedisValue[] values)
+        {
+            // redis properties count must match count of object properties
+            // in order to get right property result for corresponding property
+            var properties = typeof(T).GetProperties();
+            if (properties.Count() != values.Count())
+                throw new ArgumentException("Object properties not matching");
+
+            dynamic obj = new ExpandoObject();
+            var expandoDict = obj as IDictionary<string, object>;
+
+            for (int i = 0; i < properties.Count(); i++)
+            {
+                var redisValue = values[i];
+                var property = properties.ElementAt(i);
+                expandoDict[property.Name] = redisValue;
+            }
+
+            string serializedObject = JsonConvert.SerializeObject(obj);
+            return JsonConvert.DeserializeObject<T>(serializedObject);
         }
 
         #endregion
