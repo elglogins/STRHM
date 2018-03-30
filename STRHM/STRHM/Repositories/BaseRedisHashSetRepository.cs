@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Dynamic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using STRHM.Attributes;
+using STRHM.Collections;
 using STRHM.Extensions;
 
 namespace STRHM.Repositories
@@ -33,6 +35,13 @@ namespace STRHM.Repositories
 
         #region Exposed methods
 
+        public StronglyTypedDictionary<T> HashGet(string key, params Expression<Func<T, object>>[] properties)
+        {
+            var database = GetConnection.GetDatabase(Database);
+            var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
+            return Map(database.HashGet(KeyNamespace + key, propertiesAsRedisValues), properties);
+        }
+
         public void Save(string key, T model)
         {
             if (String.IsNullOrEmpty(key))
@@ -54,6 +63,11 @@ namespace STRHM.Repositories
         #endregion
 
         #region Privates
+
+        private RedisValue[] TransformExpressionIntoRedisValues(params Expression<Func<T, object>>[] properties)
+        {
+            return properties.Select(c=> (RedisValue) c.GetPropertyName()).ToArray();
+        }
 
         private RedisValue[] ObjectPropertyNames
         {
@@ -126,6 +140,25 @@ namespace STRHM.Repositories
 
             string serializedObject = JsonConvert.SerializeObject(obj);
             return JsonConvert.DeserializeObject<T>(serializedObject);
+        }
+
+        /// <summary>
+        /// Maps Redis result values to strongly typed dictionary of T type
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="properties"></param>
+        /// <returns></returns>
+        private StronglyTypedDictionary<T> Map(RedisValue[] values, params Expression<Func<T, object>>[] properties)
+        {
+            // ensure same amount of Redis result values is present as requested using expression
+            if (values.Length != properties.Length)
+                throw new ArgumentException("Object properties not matching");
+
+            var dictionary = new StronglyTypedDictionary<T>();
+            for (int i = 0; i < properties.Length; i++)
+                dictionary.Add(properties[i], values[i]);
+            
+            return dictionary;
         }
 
         #endregion

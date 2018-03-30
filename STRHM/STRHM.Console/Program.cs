@@ -37,6 +37,14 @@ namespace STRHM.Console
 
             bookRepository.Save(book.SerialNumber, book);
             var redisBook = bookRepository.Get(book.SerialNumber);
+
+            var redisBookDictionary = bookRepository.HashGet(book.SerialNumber,
+                x => x.Title,
+                x => x.SerialNumber);
+
+            System.Console.WriteLine(redisBookDictionary[c => c.SerialNumber]);
+            System.Console.WriteLine(redisBookDictionary[c => c.Title]);
+            System.Console.Read();
         }
     }
 }

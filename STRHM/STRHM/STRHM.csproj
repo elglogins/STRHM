@@ -49,6 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\SerializableRedisPropertyAttribute.cs" />
+    <Compile Include="Collections\StronglyTypedDictionary.cs" />
+    <Compile Include="Extensions\ExpressionExtensions.cs" />
     <Compile Include="Extensions\RedisValueExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\BaseRedisHashSetRepository.cs" />
