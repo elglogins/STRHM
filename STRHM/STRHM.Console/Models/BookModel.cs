@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using STRHM.Attributes;
 
 namespace STRHM.Console.Models
 {
@@ -15,8 +16,10 @@ namespace STRHM.Console.Models
 
         public int Rating { get; set; }
 
-        //public AuthorModel Author { get; set; }
+        [SerializableRedisProperty]
+        public AuthorModel Author { get; set; }
 
-        //public List<AwardModel> Awards { get; set; }
+        [SerializableRedisProperty]
+        public List<AwardModel> Awards { get; set; }
     }
 }

@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Dynamic;
 using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
 using StackExchange.Redis;
+using STRHM.Attributes;
+using STRHM.Extensions;
 
 namespace STRHM.Repositories
 {
@@ -77,7 +80,18 @@ namespace STRHM.Repositories
                 if (objectProperty == null)
                     throw new Exception($"Couldn't get object property named {propertyName}");
 
-                var value = (objectProperty.GetValue(obj, null) ?? String.Empty).ToString();
+                string value = String.Empty; // default value
+
+                if (objectProperty.GetCustomAttributes<SerializableRedisPropertyAttribute>(false).Any())
+                {
+                    var propertyValue = objectProperty.GetValue(obj, null);
+                    // avoid persisting "" value as a json object, issues deserializing
+                    if (propertyValue != null)
+                        value = JsonConvert.SerializeObject(objectProperty.GetValue(obj, null) ?? String.Empty);
+                }
+                else
+                    value = (objectProperty.GetValue(obj, null) ?? String.Empty).ToString();
+
                 values.Add(new HashEntry(propertyName, value));
             }
             return values.ToArray();
@@ -103,7 +117,11 @@ namespace STRHM.Repositories
             {
                 var redisValue = values[i];
                 var property = properties.ElementAt(i);
-                expandoDict[property.Name] = redisValue;
+
+                if (redisValue.IsJson())
+                    expandoDict[property.Name] = JsonConvert.DeserializeObject<dynamic>(redisValue);
+                else
+                    expandoDict[property.Name] = redisValue;
             }
 
             string serializedObject = JsonConvert.SerializeObject(obj);
