@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using STRHM.Collections;
 using STRHM.Console.Models;
 using STRHM.Console.Repositories;
 
@@ -38,6 +39,18 @@ namespace STRHM.Console
             bookRepository.Save(book.SerialNumber, book);
             var redisBook = bookRepository.Get(book.SerialNumber);
 
+            bookRepository.HashSet(book.SerialNumber, new StronglyTypedDictionary<BookModel>
+            {
+                {x=>x.Rating, 10},
+                {x=>x.PublishedOn, DateTime.Now},
+                {x=>x.Author, new AuthorModel()
+                    {
+                        Firstname = "John",
+                        Lastname = "Smith"
+                    }
+                }
+            });
+
             var redisBookDictionary = bookRepository.HashGet(book.SerialNumber,
                 x => x.Title,
                 x => x.SerialNumber,
@@ -47,8 +60,6 @@ namespace STRHM.Console
             var rating = redisBookDictionary.Get<int>(x => x.Rating);
             var serialNumber = redisBookDictionary.Get<int>(x => x.SerialNumber);
             var author = redisBookDictionary.Get<AuthorModel>(x => x.Author);
-
-            System.Console.Read();
         }
     }
 }

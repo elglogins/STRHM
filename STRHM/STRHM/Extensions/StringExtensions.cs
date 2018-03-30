@@ -10,7 +10,7 @@ namespace STRHM.Extensions
                 return false;
 
             // cleanup value content
-            var cleanedValue = value.ToString().Trim();
+            var cleanedValue = value.ToString().Replace("\"", "").Trim();
 
             // if starts and ends with matching Parentes, then we assume
             // that it is a json object value

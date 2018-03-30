@@ -37,9 +37,15 @@ namespace STRHM.Repositories
 
         public StronglyTypedDictionary<T> HashGet(string key, params Expression<Func<T, object>>[] properties)
         {
-            var database = GetConnection.GetDatabase(Database);
+            var database = RedisConnectionMultiplexer.GetDatabase(Database);
             var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
             return Map(database.HashGet(KeyNamespace + key, propertiesAsRedisValues), properties);
+        }
+
+        public void HashSet(string key, StronglyTypedDictionary<T> updates)
+        {
+            IDatabase database = RedisConnectionMultiplexer.GetDatabase(Database);
+            database.HashSet(KeyNamespace + key, TransformDictionaryIntoHashEntries(updates));
         }
 
         public void Save(string key, T model)
@@ -50,19 +56,25 @@ namespace STRHM.Repositories
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            var database = GetConnection.GetDatabase(Database);
+            var database = RedisConnectionMultiplexer.GetDatabase(Database);
             database.HashSet(KeyNamespace + key, Map(model));
         }
 
         public T Get(string key)
         {
-            var database = GetConnection.GetDatabase(Database);
+            var database = RedisConnectionMultiplexer.GetDatabase(Database);
             return Map(database.HashGet(KeyNamespace + key, ObjectPropertyNames));
         }
 
         #endregion
 
         #region Privates
+
+        private HashEntry[] TransformDictionaryIntoHashEntries(StronglyTypedDictionary<T> updates)
+        {
+            // ensure that value is not null, otherway exception is throw, use emtpy string instead
+            return updates.Where(c=>c.Value != null).Select(s => new HashEntry(s.Key, s.Value.ToString() )).ToArray();
+        }
 
         private RedisValue[] TransformExpressionIntoRedisValues(params Expression<Func<T, object>>[] properties)
         {
@@ -156,7 +168,12 @@ namespace STRHM.Repositories
 
             var dictionary = new StronglyTypedDictionary<T>();
             for (int i = 0; i < properties.Length; i++)
-                dictionary.Add(properties[i], values[i]);
+            {
+                if (properties[i].IsPropertySerializable())
+                    dictionary.Add(properties[i], JsonConvert.DeserializeObject<dynamic>(values[i]));
+                else
+                    dictionary.Add(properties[i], values[i]);
+            }
             
             return dictionary;
         }
@@ -165,7 +182,7 @@ namespace STRHM.Repositories
 
         #region Connection
 
-        protected static ConnectionMultiplexer GetConnection
+        protected static ConnectionMultiplexer RedisConnectionMultiplexer
         {
             get
             {

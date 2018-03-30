@@ -8,12 +8,12 @@ using STRHM.Extensions;
 
 namespace STRHM.Collections
 {
-    public class StronglyTypedDictionary<T> : Dictionary<string,string>
+    public class StronglyTypedDictionary<T> : Dictionary<string,object>
         where T: class
     {
-        public void Add(Expression<Func<T, object>> key, string value)
+        public void Add(Expression<Func<T, object>> key, object value)
         {
-            Add(key.GetPropertyName(), value);
+            this[key] = value;
         }
 
         public bool Remove(Expression<Func<T, object>> key)
@@ -25,17 +25,19 @@ namespace STRHM.Collections
         {
             var value = this[key];
 
-            if (value == null)
+            if (value == null || String.IsNullOrEmpty(value.ToString()))
                 return default(TK);
 
-            if (value.IsJson())
-                return JsonConvert.DeserializeObject<TK>(value);
+            if (value.ToString().IsJson())
+            {
+                return JsonConvert.DeserializeObject<TK>(value.ToString());
+            }
 
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(TK));
-            return (TK)converter.ConvertFromString(null, CultureInfo.InvariantCulture, value);
+            return (TK)converter.ConvertFromString(null, CultureInfo.InvariantCulture, value.ToString());
         }
 
-        public string this[Expression<Func<T, object>> key]
+        public object this[Expression<Func<T, object>> key]
         {
             get
             {
@@ -47,7 +49,11 @@ namespace STRHM.Collections
 
             set
             {
-                base[key.GetPropertyName()] = value;
+                var isSerializable = key.IsPropertySerializable();
+                if (isSerializable)
+                    base[key.GetPropertyName()] = value == null ? String.Empty : JsonConvert.SerializeObject(value);
+                else
+                    base[key.GetPropertyName()] = value;
             }
         }
     }
