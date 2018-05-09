@@ -8,9 +8,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>STRHM.Console</RootNamespace>
     <AssemblyName>STRHM.Console</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,6 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -54,7 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\STRHM\STRHM.csproj">
-      <Project>{574ECC1F-2B07-4DAF-AC88-02A39B95B373}</Project>
+      <Project>{93bb904d-dd15-41e2-9114-3bd3db673f37}</Project>
       <Name>STRHM</Name>
     </ProjectReference>
   </ItemGroup>

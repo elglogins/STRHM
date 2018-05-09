@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -20,14 +19,13 @@ namespace STRHM.Repositories
         protected readonly int Database;
         protected readonly string KeyNamespace;
 
-        public BaseRedisHashSetRepository(string keyNamespace, int database)
+        public BaseRedisHashSetRepository(string connectionString, string keyNamespace, int database)
         {
             if (String.IsNullOrEmpty(keyNamespace))
                 throw new ArgumentNullException(nameof(keyNamespace));
 
-            var conString = ConfigurationManager.ConnectionStrings["RedisConnectionString"].ConnectionString;
             _configurationOptions = new ConfigurationOptions();
-            _configurationOptions.EndPoints.Add(conString);
+            _configurationOptions.EndPoints.Add(connectionString);
 
             Database = database;
             KeyNamespace = keyNamespace;
