@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using StackExchange.Redis;
 using STRHM.Collections;
 using STRHM.Console.Models;
 using STRHM.Console.Repositories;
@@ -37,6 +38,8 @@ namespace STRHM.Console
             };
 
             bookRepository.Save(book.SerialNumber, book);
+            bookRepository.SetExpiration(book.SerialNumber, TimeSpan.FromMinutes(2));
+            bookRepository.RemoveExpiration(book.SerialNumber);
             var redisBook = bookRepository.Get(book.SerialNumber);
 
             bookRepository.HashSet(book.SerialNumber, new StronglyTypedDictionary<BookModel>
@@ -51,7 +54,9 @@ namespace STRHM.Console
                 }
             });
 
-            var redisBookDictionary = bookRepository.HashGet(book.SerialNumber,
+            bookRepository.SetExpiration(book.SerialNumber, TimeSpan.FromSeconds(5));
+
+            var redisBookDictionary = bookRepository.HashGet(book.SerialNumber, CommandFlags.None, 
                 x => x.Title,
                 x => x.SerialNumber,
                 x => x.Rating,

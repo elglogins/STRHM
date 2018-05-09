@@ -39,7 +39,15 @@ namespace STRHM.Collections
 
             // https://msdn.microsoft.com/en-us/library/system.componentmodel.typedescriptor(v=vs.110).aspx
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(TK));
-            return (TK)converter.ConvertFromString(null, CultureInfo.InvariantCulture, value.ToString());
+            
+            try
+            {
+                return (TK)converter.ConvertFromString(null, CultureInfo.InvariantCulture, value.ToString());
+            }
+            catch(Exception)
+            {
+                return default(TK);
+            }
         }
 
         public object this[Expression<Func<T, object>> key]

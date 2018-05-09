@@ -33,20 +33,20 @@ namespace STRHM.Repositories
 
         #region Exposed methods
 
-        public StronglyTypedDictionary<T> HashGet(string key, params Expression<Func<T, object>>[] properties)
+        public StronglyTypedDictionary<T> HashGet(string key, CommandFlags flags = CommandFlags.None, params Expression<Func<T, object>>[] properties)
         {
             var database = RedisConnectionMultiplexer.GetDatabase(Database);
             var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
-            return Map(database.HashGet(KeyNamespace + key, propertiesAsRedisValues), properties);
+            return Map(database.HashGet(KeyNamespace + key, propertiesAsRedisValues, flags), properties);
         }
 
-        public void HashSet(string key, StronglyTypedDictionary<T> updates)
+        public void HashSet(string key, StronglyTypedDictionary<T> updates, CommandFlags flags = CommandFlags.None)
         {
             IDatabase database = RedisConnectionMultiplexer.GetDatabase(Database);
-            database.HashSet(KeyNamespace + key, TransformDictionaryIntoHashEntries(updates));
+            database.HashSet(KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), flags);
         }
 
-        public void Save(string key, T model)
+        public void Save(string key, T model, CommandFlags flags = CommandFlags.None)
         {
             if (String.IsNullOrEmpty(key))
                 throw new ArgumentNullException(nameof(key));
@@ -55,13 +55,25 @@ namespace STRHM.Repositories
                 throw new ArgumentNullException(nameof(model));
 
             var database = RedisConnectionMultiplexer.GetDatabase(Database);
-            database.HashSet(KeyNamespace + key, Map(model));
+            database.HashSet(KeyNamespace + key, Map(model), flags);
         }
 
-        public T Get(string key)
+        public T Get(string key, CommandFlags flags = CommandFlags.None)
         {
             var database = RedisConnectionMultiplexer.GetDatabase(Database);
-            return Map(database.HashGet(KeyNamespace + key, ObjectPropertyNames));
+            return Map(database.HashGet(KeyNamespace + key, ObjectPropertyNames, flags));
+        }
+
+        public void RemoveExpiration(string key, CommandFlags flags = CommandFlags.None)
+        {
+            var database = RedisConnectionMultiplexer.GetDatabase(Database);
+            database.KeyExpire(KeyNamespace + key, (TimeSpan?)null, flags);
+        }
+
+        public void SetExpiration(string key, TimeSpan expiration, CommandFlags flags = CommandFlags.None)
+        {
+            var database = RedisConnectionMultiplexer.GetDatabase(Database);
+            database.KeyExpire(KeyNamespace + key, expiration, flags);
         }
 
         #endregion
@@ -167,7 +179,7 @@ namespace STRHM.Repositories
             var dictionary = new StronglyTypedDictionary<T>();
             for (int i = 0; i < properties.Length; i++)
             {
-                if (properties[i].IsPropertySerializable())
+                if (values[i].HasValue && properties[i].IsPropertySerializable())
                     dictionary.Add(properties[i], JsonConvert.DeserializeObject<dynamic>(values[i]));
                 else
                     dictionary.Add(properties[i], values[i]);
