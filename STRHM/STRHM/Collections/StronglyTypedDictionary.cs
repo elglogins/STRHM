@@ -21,6 +21,12 @@ namespace STRHM.Collections
             return Remove(key.GetPropertyName());
         }
 
+        public bool HasValue(Expression<Func<T, object>> key)
+        {
+            var value = this[key];
+            return value != null && !String.IsNullOrEmpty(value.ToString());
+        }
+
         public TK Get<TK>(Expression<Func<T, object>> key)
         {
             var value = this[key];
