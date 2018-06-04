@@ -12,20 +12,16 @@ using STRHM.Extensions;
 
 namespace STRHM.Repositories
 {
-    public abstract class BaseRedisHashSetRepository<T>
+    public abstract class BaseRedisHashSetRepository<T> : AbstractRedisConnection
         where T : class
     {
-        private static ConfigurationOptions _configurationOptions;
         protected readonly int Database;
         protected readonly string KeyNamespace;
 
-        public BaseRedisHashSetRepository(string connectionString, string keyNamespace, int database)
+        public BaseRedisHashSetRepository(string connectionString, string keyNamespace, int database) : base(connectionString)
         {
             if (String.IsNullOrEmpty(keyNamespace))
                 throw new ArgumentNullException(nameof(keyNamespace));
-
-            _configurationOptions = new ConfigurationOptions();
-            _configurationOptions.EndPoints.Add(connectionString);
 
             Database = database;
             KeyNamespace = keyNamespace;
@@ -77,8 +73,8 @@ namespace STRHM.Repositories
         }
 
         #endregion
-
-        #region Privates
+        
+        #region Privates 
 
         private HashEntry[] TransformDictionaryIntoHashEntries(StronglyTypedDictionary<T> updates)
         {
@@ -187,24 +183,6 @@ namespace STRHM.Repositories
             
             return dictionary;
         }
-
-        #endregion
-
-        #region Connection
-
-        protected static ConnectionMultiplexer RedisConnectionMultiplexer
-        {
-            get
-            {
-                return LazyConnection.Value;
-            }
-        }
-
-        protected static readonly Lazy<ConnectionMultiplexer> LazyConnection
-            = new Lazy<ConnectionMultiplexer>(() =>
-            {
-                return ConnectionMultiplexer.Connect(_configurationOptions);
-            });
 
         #endregion
     }
