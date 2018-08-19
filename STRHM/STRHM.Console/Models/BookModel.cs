@@ -8,13 +8,13 @@ namespace STRHM.Console.Models
     {
         public string SerialNumber { get; set; }
 
+        public bool Featured { get; set; }
+
+        public int? Rating { get; set; }
+
         public string Title { get; set; }
 
         public DateTime PublishedOn { get; set; }
-
-        public bool Featured { get; set; }
-
-        public int Rating { get; set; }
 
         [SerializableRedisProperty]
         public AuthorModel Author { get; set; }

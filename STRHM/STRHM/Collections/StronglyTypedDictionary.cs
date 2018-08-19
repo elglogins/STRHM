@@ -27,7 +27,7 @@ namespace STRHM.Collections
             return value != null && !String.IsNullOrEmpty(value.ToString());
         }
 
-        public TK Get<TK>(Expression<Func<T, object>> key)
+        public TK Get<TK>(Expression<Func<T, object>> key, CultureInfo cultureInfo = null)
         {
             var value = this[key];
 
@@ -39,15 +39,20 @@ namespace STRHM.Collections
 
             // https://msdn.microsoft.com/en-us/library/system.componentmodel.typedescriptor(v=vs.110).aspx
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(TK));
-            
+
             try
             {
-                return (TK)converter.ConvertFromString(null, CultureInfo.InvariantCulture, value.ToString());
+                return (TK)converter.ConvertFromString(null, cultureInfo ?? CultureInfo.CurrentCulture, value.ToString());
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return default(TK);
             }
+        }
+
+        public TK Get<TK>(Expression<Func<T, object>> key)
+        {
+            return Get<TK>(key, CultureInfo.CurrentCulture);
         }
 
         public object this[Expression<Func<T, object>> key]

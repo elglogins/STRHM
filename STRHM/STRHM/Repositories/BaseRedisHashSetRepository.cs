@@ -4,7 +4,9 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using StackExchange.Redis;
 using STRHM.Attributes;
 using STRHM.Collections;
@@ -17,6 +19,8 @@ namespace STRHM.Repositories
     {
         protected readonly int Database;
         protected readonly string KeyNamespace;
+        protected readonly string DateTimeSerializationFormat = "dd/MM/yyyy HH:mm:ss";
+        protected readonly IDatabase _cache;
 
         public BaseRedisHashSetRepository(string connectionString, string keyNamespace, int database) : base(connectionString)
         {
@@ -25,24 +29,24 @@ namespace STRHM.Repositories
 
             Database = database;
             KeyNamespace = keyNamespace;
+            _cache = RedisConnectionMultiplexer.GetDatabase(Database);
         }
 
         #region Exposed methods
 
-        public StronglyTypedDictionary<T> HashGet(string key, CommandFlags flags = CommandFlags.None, params Expression<Func<T, object>>[] properties)
+        public async Task<StronglyTypedDictionary<T>> HashGetAsync(string key, CommandFlags flags = CommandFlags.None, params Expression<Func<T, object>>[] properties)
         {
-            var database = RedisConnectionMultiplexer.GetDatabase(Database);
             var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
-            return Map(database.HashGet(KeyNamespace + key, propertiesAsRedisValues, flags), properties);
+            var values = await _cache.HashGetAsync(KeyNamespace + key, propertiesAsRedisValues, flags);
+            return Map(values, properties);
         }
 
-        public void HashSet(string key, StronglyTypedDictionary<T> updates, CommandFlags flags = CommandFlags.None)
+        public async Task HashSetAsync(string key, StronglyTypedDictionary<T> updates, CommandFlags flags = CommandFlags.None)
         {
-            IDatabase database = RedisConnectionMultiplexer.GetDatabase(Database);
-            database.HashSet(KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), flags);
+            await _cache.HashSetAsync(KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), flags);
         }
 
-        public void Save(string key, T model, CommandFlags flags = CommandFlags.None)
+        public async Task SaveAsync(string key, T model, CommandFlags flags = CommandFlags.None)
         {
             if (String.IsNullOrEmpty(key))
                 throw new ArgumentNullException(nameof(key));
@@ -50,26 +54,23 @@ namespace STRHM.Repositories
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            var database = RedisConnectionMultiplexer.GetDatabase(Database);
-            database.HashSet(KeyNamespace + key, Map(model), flags);
+            await _cache.HashSetAsync(KeyNamespace + key, Map(model), flags);
         }
 
-        public T Get(string key, CommandFlags flags = CommandFlags.None)
+        public async Task<T> GetAsync(string key, CommandFlags flags = CommandFlags.None)
         {
-            var database = RedisConnectionMultiplexer.GetDatabase(Database);
-            return Map(database.HashGet(KeyNamespace + key, ObjectPropertyNames, flags));
+            var values = await _cache.HashGetAsync(KeyNamespace + key, ObjectPropertyNames, flags);
+            return Map(values);
         }
 
-        public void RemoveExpiration(string key, CommandFlags flags = CommandFlags.None)
+        public async Task RemoveExpirationAsync(string key, CommandFlags flags = CommandFlags.None)
         {
-            var database = RedisConnectionMultiplexer.GetDatabase(Database);
-            database.KeyExpire(KeyNamespace + key, (TimeSpan?)null, flags);
+            await _cache.KeyExpireAsync(KeyNamespace + key, (TimeSpan?)null, flags);
         }
 
-        public void SetExpiration(string key, TimeSpan expiration, CommandFlags flags = CommandFlags.None)
+        public async Task SetExpirationAsync(string key, TimeSpan expiration, CommandFlags flags = CommandFlags.None)
         {
-            var database = RedisConnectionMultiplexer.GetDatabase(Database);
-            database.KeyExpire(KeyNamespace + key, expiration, flags);
+            await _cache.KeyExpireAsync(KeyNamespace + key, expiration, flags);
         }
 
         #endregion
@@ -119,7 +120,7 @@ namespace STRHM.Repositories
                     var propertyValue = objectProperty.GetValue(obj, null);
                     // avoid persisting "" value as a json object, issues deserializing
                     if (propertyValue != null)
-                        value = JsonConvert.SerializeObject(objectProperty.GetValue(obj, null) ?? String.Empty);
+                        value = JsonConvert.SerializeObject(objectProperty.GetValue(obj, null) ?? String.Empty, new IsoDateTimeConverter { DateTimeFormat = DateTimeSerializationFormat });
                 }
                 else
                     value = (objectProperty.GetValue(obj, null) ?? String.Empty).ToString();
@@ -156,8 +157,8 @@ namespace STRHM.Repositories
                     expandoDict[property.Name] = redisValue;
             }
 
-            string serializedObject = JsonConvert.SerializeObject(obj);
-            return JsonConvert.DeserializeObject<T>(serializedObject);
+            string serializedObject = JsonConvert.SerializeObject(obj, new IsoDateTimeConverter { DateTimeFormat = DateTimeSerializationFormat });
+            return JsonConvert.DeserializeObject<T>(serializedObject, new IsoDateTimeConverter { DateTimeFormat = DateTimeSerializationFormat });
         }
 
         /// <summary>
