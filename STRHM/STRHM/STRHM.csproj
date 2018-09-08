@@ -2,9 +2,15 @@
 
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
-    <Version>2.0.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <Version>2.0.1</Version>
+    <AssemblyVersion>2.0.1.0</AssemblyVersion>
+    <FileVersion>2.0.1.0</FileVersion>
+    <RepositoryUrl>https://github.com/elglogins/STRHM</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/elglogins/STRHM</PackageProjectUrl>
+    <Description>Strongly typed implementation for Redis StackExchange client, when using hashset functionality.</Description>
+    <Authors>Elgars Logins</Authors>
+    <PackageReleaseNotes>Namespace refactoring</PackageReleaseNotes>
+    <PackageTags>redis, strhm</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
