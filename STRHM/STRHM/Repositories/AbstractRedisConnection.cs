@@ -1,30 +1,21 @@
 ﻿using StackExchange.Redis;
 using System;
+using STRHM.Interfaces;
 
 namespace STRHM.Repositories
 {
-    public abstract class AbstractRedisConnection
+    public class RedisConnection : IRedisConnection
     {
         private static ConfigurationOptions _configurationOptions;
 
-        public AbstractRedisConnection(string connectionString)
+        public RedisConnection(ConfigurationOptions options)
         {
-            _configurationOptions = new ConfigurationOptions();
-            _configurationOptions.EndPoints.Add(connectionString);
+            _configurationOptions = options;
         }
 
-        protected static ConnectionMultiplexer RedisConnectionMultiplexer
-        {
-            get
-            {
-                return LazyConnection.Value;
-            }
-        }
+        private readonly Lazy<ConnectionMultiplexer> _lazyConnection
+            = new Lazy<ConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(_configurationOptions));
 
-        protected static readonly Lazy<ConnectionMultiplexer> LazyConnection
-            = new Lazy<ConnectionMultiplexer>(() =>
-            {
-                return ConnectionMultiplexer.Connect(_configurationOptions);
-            });
+        public ConnectionMultiplexer GetConnection => _lazyConnection.Value;
     }
 }

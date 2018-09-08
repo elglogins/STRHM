@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "STRHM", "STRHM\STRHM.csproj", "{93BB904D-DD15-41E2-9114-3BD3DB673F37}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "STRHM.Serialization.NewtonsoftJson", "STRHM.Serialization.NewtonsoftJson\STRHM.Serialization.NewtonsoftJson.csproj", "{CE641A08-F36F-4FC0-9BC8-B6231DCB85FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{93BB904D-DD15-41E2-9114-3BD3DB673F37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93BB904D-DD15-41E2-9114-3BD3DB673F37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93BB904D-DD15-41E2-9114-3BD3DB673F37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE641A08-F36F-4FC0-9BC8-B6231DCB85FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE641A08-F36F-4FC0-9BC8-B6231DCB85FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE641A08-F36F-4FC0-9BC8-B6231DCB85FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE641A08-F36F-4FC0-9BC8-B6231DCB85FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

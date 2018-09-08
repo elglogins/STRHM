@@ -5,31 +5,32 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using StackExchange.Redis;
 using STRHM.Attributes;
 using STRHM.Collections;
+using STRHM.Configuration;
 using STRHM.Extensions;
+using STRHM.Interfaces;
+using STRHM.Serialization;
 
 namespace STRHM.Repositories
 {
-    public abstract class BaseRedisHashSetRepository<T> : AbstractRedisConnection
+    public abstract class BaseRedisHashSetRepository<T>
         where T : class
     {
-        protected readonly int Database;
-        protected readonly string KeyNamespace;
-        protected readonly string DateTimeSerializationFormat = "dd/MM/yyyy HH:mm:ss";
-        protected readonly IDatabase _cache;
+        protected readonly IRedisConnection RedisConnection;
+        protected readonly IStronglyTypedRedisSerializer Serializer;
+        protected readonly RedisHashSetOptions ConfigurationOptions;
 
-        public BaseRedisHashSetRepository(string connectionString, string keyNamespace, int database) : base(connectionString)
+        protected BaseRedisHashSetRepository(
+            IRedisConnection redisConnection, 
+            IStronglyTypedRedisSerializer serializer,
+            RedisHashSetOptions configurationOptions
+            )
         {
-            if (String.IsNullOrEmpty(keyNamespace))
-                throw new ArgumentNullException(nameof(keyNamespace));
-
-            Database = database;
-            KeyNamespace = keyNamespace;
-            _cache = RedisConnectionMultiplexer.GetDatabase(Database);
+            RedisConnection = redisConnection;
+            Serializer = serializer;
+            ConfigurationOptions = configurationOptions;
         }
 
         #region Exposed methods
@@ -37,13 +38,15 @@ namespace STRHM.Repositories
         public async Task<StronglyTypedDictionary<T>> HashGetAsync(string key, CommandFlags flags = CommandFlags.None, params Expression<Func<T, object>>[] properties)
         {
             var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
-            var values = await _cache.HashGetAsync(KeyNamespace + key, propertiesAsRedisValues, flags);
+            var values = await Database
+                .HashGetAsync(ConfigurationOptions.KeyNamespace + key, propertiesAsRedisValues, flags);
             return Map(values, properties);
         }
 
         public async Task HashSetAsync(string key, StronglyTypedDictionary<T> updates, CommandFlags flags = CommandFlags.None)
         {
-            await _cache.HashSetAsync(KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), flags);
+            await Database
+                .HashSetAsync(ConfigurationOptions.KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), flags);
         }
 
         public async Task SaveAsync(string key, T model, CommandFlags flags = CommandFlags.None)
@@ -54,27 +57,29 @@ namespace STRHM.Repositories
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            await _cache.HashSetAsync(KeyNamespace + key, Map(model), flags);
+            await Database.HashSetAsync(ConfigurationOptions.KeyNamespace + key, Map(model), flags);
         }
 
         public async Task<T> GetAsync(string key, CommandFlags flags = CommandFlags.None)
         {
-            var values = await _cache.HashGetAsync(KeyNamespace + key, ObjectPropertyNames, flags);
+            var values = await Database.HashGetAsync(ConfigurationOptions.KeyNamespace + key, ObjectPropertyNames, flags);
             return Map(values);
         }
 
         public async Task RemoveExpirationAsync(string key, CommandFlags flags = CommandFlags.None)
         {
-            await _cache.KeyExpireAsync(KeyNamespace + key, (TimeSpan?)null, flags);
+            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, (TimeSpan?)null, flags);
         }
 
         public async Task SetExpirationAsync(string key, TimeSpan expiration, CommandFlags flags = CommandFlags.None)
         {
-            await _cache.KeyExpireAsync(KeyNamespace + key, expiration, flags);
+            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, expiration, flags);
         }
 
         #endregion
-        
+
+        protected IDatabase Database => RedisConnection.GetConnection.GetDatabase(ConfigurationOptions.Database);
+
         #region Privates 
 
         private HashEntry[] TransformDictionaryIntoHashEntries(StronglyTypedDictionary<T> updates)
@@ -120,7 +125,8 @@ namespace STRHM.Repositories
                     var propertyValue = objectProperty.GetValue(obj, null);
                     // avoid persisting "" value as a json object, issues deserializing
                     if (propertyValue != null)
-                        value = JsonConvert.SerializeObject(objectProperty.GetValue(obj, null) ?? String.Empty, new IsoDateTimeConverter { DateTimeFormat = DateTimeSerializationFormat });
+                        value = Serializer.Serialize(objectProperty.GetValue(obj, null) ?? String.Empty,
+                            ConfigurationOptions.DateTimeSerializationFormat);
                 }
                 else
                     value = (objectProperty.GetValue(obj, null) ?? String.Empty).ToString();
@@ -152,20 +158,20 @@ namespace STRHM.Repositories
                 var property = properties.ElementAt(i);
 
                 if (redisValue.IsJson())
-                    expandoDict[property.Name] = JsonConvert.DeserializeObject<dynamic>(redisValue);
+                    expandoDict[property.Name] = Serializer.Deserialize<dynamic>(redisValue);
                 else
                     expandoDict[property.Name] = redisValue;
             }
 
-            string serializedObject = JsonConvert.SerializeObject(obj, new IsoDateTimeConverter { DateTimeFormat = DateTimeSerializationFormat });
-            return JsonConvert.DeserializeObject<T>(serializedObject, new IsoDateTimeConverter { DateTimeFormat = DateTimeSerializationFormat });
+            string serializedObject = Serializer.Serialize(obj, ConfigurationOptions.DateTimeSerializationFormat);
+            return Serializer.Deserialize<T>(serializedObject, ConfigurationOptions.DateTimeSerializationFormat);
         }
 
-        /// <summary>
+        /// <summary>protected
         /// Maps Redis result values to strongly typed dictionary of T type
         /// </summary>
         /// <param name="values"></param>
-        /// <param name="properties"></param>
+        ///// <param name="properties"></param>
         /// <returns></returns>
         private StronglyTypedDictionary<T> Map(RedisValue[] values, params Expression<Func<T, object>>[] properties)
         {
@@ -177,7 +183,7 @@ namespace STRHM.Repositories
             for (int i = 0; i < properties.Length; i++)
             {
                 if (values[i].HasValue && properties[i].IsPropertySerializable())
-                    dictionary.Add(properties[i], JsonConvert.DeserializeObject<dynamic>(values[i]));
+                    dictionary.Add(properties[i], Serializer.Deserialize<dynamic>(values[i]));
                 else
                     dictionary.Add(properties[i], values[i]);
             }

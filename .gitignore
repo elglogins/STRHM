@@ -12,3 +12,5 @@ STRHM/STRHM.Console/bin/
 STRHM/STRHM/bin/
 STRHM/packages/
 STRHM/STRHM/obj/
+STRHM/STRHM.Serialization.NewtonsoftJson/obj/
+STRHM/STRHM.Serialization.NewtonsoftJson/bin/

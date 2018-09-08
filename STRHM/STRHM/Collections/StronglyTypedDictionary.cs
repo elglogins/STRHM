@@ -3,14 +3,26 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq.Expressions;
-using Newtonsoft.Json;
 using STRHM.Extensions;
+using STRHM.Serialization;
 
 namespace STRHM.Collections
 {
     public class StronglyTypedDictionary<T> : Dictionary<string,object>
         where T: class
     {
+        protected readonly IStronglyTypedRedisSerializer Serializer;
+
+        public StronglyTypedDictionary(IStronglyTypedRedisSerializer serializer)
+        {
+            Serializer = serializer;
+        }
+
+        public StronglyTypedDictionary()
+        {
+
+        }
+
         public void Add(Expression<Func<T, object>> key, object value)
         {
             this[key] = value;
@@ -35,7 +47,7 @@ namespace STRHM.Collections
                 return default(TK);
 
             if (value.ToString().IsJson())
-                return JsonConvert.DeserializeObject<TK>(value.ToString());
+                return Serializer.Deserialize<TK>(value.ToString());
 
             // https://msdn.microsoft.com/en-us/library/system.componentmodel.typedescriptor(v=vs.110).aspx
             TypeConverter converter = TypeDescriptor.GetConverter(typeof(TK));
@@ -69,7 +81,7 @@ namespace STRHM.Collections
             {
                 var isSerializable = key.IsPropertySerializable();
                 if (isSerializable)
-                    base[key.GetPropertyName()] = value == null ? String.Empty : JsonConvert.SerializeObject(value);
+                    base[key.GetPropertyName()] = value == null ? String.Empty : Serializer.Serialize(value);
                 else
                     base[key.GetPropertyName()] = value;
             }
