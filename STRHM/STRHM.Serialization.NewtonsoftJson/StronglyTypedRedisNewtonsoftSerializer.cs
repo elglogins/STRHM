@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using STRHM.Interfaces;
 
 namespace STRHM.Serialization.NewtonsoftJson
 {

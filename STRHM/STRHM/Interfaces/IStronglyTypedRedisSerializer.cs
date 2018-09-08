@@ -1,4 +1,4 @@
-﻿namespace STRHM.Serialization
+﻿namespace STRHM.Interfaces
 {
     public interface IStronglyTypedRedisSerializer
     {

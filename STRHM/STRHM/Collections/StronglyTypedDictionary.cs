@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq.Expressions;
 using STRHM.Extensions;
-using STRHM.Serialization;
+using STRHM.Interfaces;
 
 namespace STRHM.Collections
 {
