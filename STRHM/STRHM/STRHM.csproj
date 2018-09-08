@@ -11,6 +11,7 @@
     <Authors>Elgars Logins</Authors>
     <PackageReleaseNotes>Namespace refactoring</PackageReleaseNotes>
     <PackageTags>redis, strhm</PackageTags>
+    <PackageIconUrl>https://raw.githubusercontent.com/elglogins/STRHM/master/STRHM/icon.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <Version>1.0.1</Version>
+    <Description>Newtonsoft.Json serializer for STRHM ( Strongly typed implementation for Redis StackExchange client, when using hashset functionality ).</Description>
+    <PackageProjectUrl>https://github.com/elglogins/STRHM</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elglogins/STRHM</RepositoryUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/elglogins/STRHM/master/STRHM/icon.png</PackageIconUrl>
+    <Authors>Elgars Logins</Authors>
+    <PackageTags>redis, strhm, json, newtonsoft</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
