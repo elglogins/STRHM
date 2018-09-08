@@ -35,21 +35,19 @@ namespace STRHM.Repositories
 
         #region Exposed methods
 
-        public async Task<StronglyTypedDictionary<T>> HashGetAsync(string key, CommandFlags flags = CommandFlags.None, params Expression<Func<T, object>>[] properties)
+        public async Task<StronglyTypedDictionary<T>> HashGetAsync(string key, params Expression<Func<T, object>>[] properties)
         {
             var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
-            var values = await Database
-                .HashGetAsync(ConfigurationOptions.KeyNamespace + key, propertiesAsRedisValues, flags);
+            var values = await Database.HashGetAsync(ConfigurationOptions.KeyNamespace + key, propertiesAsRedisValues, ConfigurationOptions.PrefferedReadFlags);
             return Map(values, properties);
         }
 
-        public async Task HashSetAsync(string key, StronglyTypedDictionary<T> updates, CommandFlags flags = CommandFlags.None)
+        public async Task HashSetAsync(string key, StronglyTypedDictionary<T> updates)
         {
-            await Database
-                .HashSetAsync(ConfigurationOptions.KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), flags);
+            await Database.HashSetAsync(ConfigurationOptions.KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), ConfigurationOptions.PrefferedWriteFlags);
         }
 
-        public async Task SaveAsync(string key, T model, CommandFlags flags = CommandFlags.None)
+        public async Task SaveAsync(string key, T model)
         {
             if (String.IsNullOrEmpty(key))
                 throw new ArgumentNullException(nameof(key));
@@ -57,23 +55,28 @@ namespace STRHM.Repositories
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            await Database.HashSetAsync(ConfigurationOptions.KeyNamespace + key, Map(model), flags);
+            await Database.HashSetAsync(ConfigurationOptions.KeyNamespace + key, Map(model), ConfigurationOptions.PrefferedWriteFlags);
         }
 
-        public async Task<T> GetAsync(string key, CommandFlags flags = CommandFlags.None)
+        public async Task<T> GetAsync(string key)
         {
-            var values = await Database.HashGetAsync(ConfigurationOptions.KeyNamespace + key, ObjectPropertyNames, flags);
+            var values = await Database.HashGetAsync(ConfigurationOptions.KeyNamespace + key, ObjectPropertyNames, ConfigurationOptions.PrefferedReadFlags);
             return Map(values);
         }
 
-        public async Task RemoveExpirationAsync(string key, CommandFlags flags = CommandFlags.None)
+        public async Task<bool> DeleteAsync(string key)
         {
-            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, (TimeSpan?)null, flags);
+            return await Database.KeyDeleteAsync(ConfigurationOptions.KeyNamespace + key, ConfigurationOptions.PrefferedWriteFlags);
         }
 
-        public async Task SetExpirationAsync(string key, TimeSpan expiration, CommandFlags flags = CommandFlags.None)
+        public async Task RemoveExpirationAsync(string key)
         {
-            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, expiration, flags);
+            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, (TimeSpan?)null, ConfigurationOptions.PrefferedWriteFlags);
+        }
+
+        public async Task SetExpirationAsync(string key, TimeSpan expiration)
+        {
+            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, expiration, ConfigurationOptions.PrefferedWriteFlags);
         }
 
         #endregion
@@ -157,29 +160,26 @@ namespace STRHM.Repositories
                 var redisValue = values[i];
                 var property = properties.ElementAt(i);
 
+                if (!redisValue.HasValue)
+                    expandoDict[property.Name] = null;
+
                 if (redisValue.IsJson())
-                    expandoDict[property.Name] = Serializer.Deserialize<dynamic>(redisValue);
+                    expandoDict[property.Name] = Serializer.Deserialize<dynamic>(redisValue.ToString());
                 else
-                    expandoDict[property.Name] = redisValue;
+                    expandoDict[property.Name] = redisValue.ToString();
             }
 
             string serializedObject = Serializer.Serialize(obj, ConfigurationOptions.DateTimeSerializationFormat);
             return Serializer.Deserialize<T>(serializedObject, ConfigurationOptions.DateTimeSerializationFormat);
         }
 
-        /// <summary>protected
-        /// Maps Redis result values to strongly typed dictionary of T type
-        /// </summary>
-        /// <param name="values"></param>
-        ///// <param name="properties"></param>
-        /// <returns></returns>
         private StronglyTypedDictionary<T> Map(RedisValue[] values, params Expression<Func<T, object>>[] properties)
         {
             // ensure same amount of Redis result values is present as requested using expression
             if (values.Length != properties.Length)
                 throw new ArgumentException("Object properties not matching");
 
-            var dictionary = new StronglyTypedDictionary<T>();
+            var dictionary = new StronglyTypedDictionary<T>(Serializer);
             for (int i = 0; i < properties.Length; i++)
             {
                 if (values[i].HasValue && properties[i].IsPropertySerializable())

@@ -18,11 +18,6 @@ namespace STRHM.Collections
             Serializer = serializer;
         }
 
-        public StronglyTypedDictionary()
-        {
-
-        }
-
         public void Add(Expression<Func<T, object>> key, object value)
         {
             this[key] = value;

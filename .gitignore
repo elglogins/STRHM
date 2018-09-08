@@ -14,3 +14,5 @@ STRHM/packages/
 STRHM/STRHM/obj/
 STRHM/STRHM.Serialization.NewtonsoftJson/obj/
 STRHM/STRHM.Serialization.NewtonsoftJson/bin/
+STRHM/STRHM.Tests/bin/
+STRHM/STRHM.Tests/obj/
