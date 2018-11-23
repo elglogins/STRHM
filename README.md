@@ -1,6 +1,4 @@
 # Strongly Typed Redis Hashset Model
-
-Guide and usage of this implementatio available:
 [Introduction article](https://medium.com/@elgarslogins/tired-of-magical-strings-for-redis-hashes-ea4d4d9e0dc)
 
 ## Supported frameworks
@@ -10,7 +8,7 @@ Guide and usage of this implementatio available:
  
 ## Example of usage
 
-Our model for caching will a Book class, that have couple of basic fields.
+Example entity will be a Book class, that has couple of basic fields.
 
     public class Book
     {
@@ -39,7 +37,7 @@ Book repository inherits from BaseRedisHashSetRepository, as it exposes most com
 **Constructor parameters:**
 
  - **IRedisConnection** - Is responsible for creating and serving connection to Redis. It can be your own implementation for specific use case, but by default you can use RedisConnection implementation, which expects your configuration options in its constructor.
- - **IStronglyTypedRedisSerializer** - Used for serializing and deserializing values into and from Redis. It is up to you which library to use - Jil, Newtonsoft or any other. You can use [this library](https://www.nuget.org/packages/STRHM.Serialization.NewtonsoftJson/) for Newtonsoft.Json.
+ - **IStronglyTypedRedisSerializer** - Used for serializing and deserializing values into and from Redis. It is up to you which library to use - Jil, Newtonsoft or any other. You can use [STRHM.Serialization.NewtonsoftJson](https://www.nuget.org/packages/STRHM.Serialization.NewtonsoftJson/) for Newtonsoft.Json.
  - **RedisHashSetOptions** - Configuration object for your repository, what namespaces to be used, which database index and command flags.
  
 **Examples of getting values:**
