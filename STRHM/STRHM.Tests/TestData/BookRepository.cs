@@ -1,15 +1,23 @@
-﻿using STRHM.Configuration;
+﻿using StackExchange.Redis;
+using STRHM.Configuration;
 using STRHM.Interfaces;
 using STRHM.Repositories;
-using STRHM.Serialization;
 
 namespace STRHM.Tests.TestData
 {
     public class BookRepository : BaseRedisHashSetRepository<Book>
     {
-        public BookRepository(IRedisConnection redisConnection, IStronglyTypedRedisSerializer serializer, RedisHashSetOptions configurationOptions) 
-            : base(redisConnection, serializer, configurationOptions)
+        private readonly RedisConnection _redisConnection;
+
+        public BookRepository(RedisConnection redisConnection, IStronglyTypedRedisSerializer serializer, RedisHashSetOptions configurationOptions)
+            : base(serializer, configurationOptions)
         {
+            _redisConnection = redisConnection;
+        }
+
+        protected override IDatabase GetDatabase(int databaseId)
+        {
+            return _redisConnection.Connection.GetDatabase(databaseId);
         }
     }
 }

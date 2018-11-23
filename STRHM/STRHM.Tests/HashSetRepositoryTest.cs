@@ -18,10 +18,7 @@ namespace STRHM.Tests
         public HashSetRepositoryTest()
         {
             _bookRepository = new BookRepository(
-                new RedisConnection(new ConfigurationOptions()
-                {
-                    EndPoints = { "localhost:6379" }
-                }), 
+                new RedisConnection("localhost:6379"),
                 new StronglyTypedRedisNewtonsoftSerializer(),  
                 new RedisHashSetOptions()
                     {
@@ -51,10 +48,10 @@ namespace STRHM.Tests
 
             await _bookRepository.SaveAsync(book.Id.ToString(), book);
             var savedBook = await _bookRepository.HashGetAsync(book.Id.ToString(),
-                b => b.Id,
-                b => b.PublishedOn,
-                b => b.Authors,
-                b => b.Rating
+                    b => b.Id,
+                    b => b.PublishedOn,
+                    b => b.Authors,
+                    b => b.Rating
                 );
 
             Assert.NotNull(savedBook);

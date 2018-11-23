@@ -1,49 +1,48 @@
-﻿using System;
+﻿using StackExchange.Redis;
+using STRHM.Attributes;
+using STRHM.Collections;
+using STRHM.Configuration;
+using STRHM.Extensions;
+using STRHM.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using StackExchange.Redis;
-using STRHM.Attributes;
-using STRHM.Collections;
-using STRHM.Configuration;
-using STRHM.Extensions;
-using STRHM.Interfaces;
 
 namespace STRHM.Repositories
 {
     public abstract class BaseRedisHashSetRepository<T>
         where T : class
     {
-        protected readonly IRedisConnection RedisConnection;
         protected readonly IStronglyTypedRedisSerializer Serializer;
         protected readonly RedisHashSetOptions ConfigurationOptions;
 
         protected BaseRedisHashSetRepository(
-            IRedisConnection redisConnection, 
             IStronglyTypedRedisSerializer serializer,
             RedisHashSetOptions configurationOptions
             )
         {
-            RedisConnection = redisConnection;
             Serializer = serializer;
             ConfigurationOptions = configurationOptions;
         }
+
+        protected abstract IDatabase GetDatabase(int databaseId);
 
         #region Exposed methods
 
         public async Task<StronglyTypedDictionary<T>> HashGetAsync(string key, params Expression<Func<T, object>>[] properties)
         {
             var propertiesAsRedisValues = TransformExpressionIntoRedisValues(properties);
-            var values = await Database.HashGetAsync(ConfigurationOptions.KeyNamespace + key, propertiesAsRedisValues, ConfigurationOptions.PrefferedReadFlags);
+            var values = await GetDatabase(ConfigurationOptions.Database).HashGetAsync(ConfigurationOptions.KeyNamespace + key, propertiesAsRedisValues, ConfigurationOptions.PrefferedReadFlags);
             return Map(values, properties);
         }
 
         public async Task HashSetAsync(string key, StronglyTypedDictionary<T> updates)
         {
-            await Database.HashSetAsync(ConfigurationOptions.KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), ConfigurationOptions.PrefferedWriteFlags);
+            await GetDatabase(ConfigurationOptions.Database).HashSetAsync(ConfigurationOptions.KeyNamespace + key, TransformDictionaryIntoHashEntries(updates), ConfigurationOptions.PrefferedWriteFlags);
         }
 
         public async Task SaveAsync(string key, T model)
@@ -54,45 +53,43 @@ namespace STRHM.Repositories
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
 
-            await Database.HashSetAsync(ConfigurationOptions.KeyNamespace + key, Map(model), ConfigurationOptions.PrefferedWriteFlags);
+            await GetDatabase(ConfigurationOptions.Database).HashSetAsync(ConfigurationOptions.KeyNamespace + key, Map(model), ConfigurationOptions.PrefferedWriteFlags);
         }
 
         public async Task<T> GetAsync(string key)
         {
-            var values = await Database.HashGetAsync(ConfigurationOptions.KeyNamespace + key, ObjectPropertyNames, ConfigurationOptions.PrefferedReadFlags);
+            var values = await GetDatabase(ConfigurationOptions.Database).HashGetAsync(ConfigurationOptions.KeyNamespace + key, ObjectPropertyNames, ConfigurationOptions.PrefferedReadFlags);
             return Map(values);
         }
 
         public async Task<bool> DeleteAsync(string key)
         {
-            return await Database.KeyDeleteAsync(ConfigurationOptions.KeyNamespace + key, ConfigurationOptions.PrefferedWriteFlags);
+            return await GetDatabase(ConfigurationOptions.Database).KeyDeleteAsync(ConfigurationOptions.KeyNamespace + key, ConfigurationOptions.PrefferedWriteFlags);
         }
 
         public async Task RemoveExpirationAsync(string key)
         {
-            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, (TimeSpan?)null, ConfigurationOptions.PrefferedWriteFlags);
+            await GetDatabase(ConfigurationOptions.Database).KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, (TimeSpan?)null, ConfigurationOptions.PrefferedWriteFlags);
         }
 
         public async Task SetExpirationAsync(string key, TimeSpan expiration)
         {
-            await Database.KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, expiration, ConfigurationOptions.PrefferedWriteFlags);
+            await GetDatabase(ConfigurationOptions.Database).KeyExpireAsync(ConfigurationOptions.KeyNamespace + key, expiration, ConfigurationOptions.PrefferedWriteFlags);
         }
 
         #endregion
-
-        protected IDatabase Database => RedisConnection.GetConnection.GetDatabase(ConfigurationOptions.Database);
 
         #region Privates 
 
         private HashEntry[] TransformDictionaryIntoHashEntries(StronglyTypedDictionary<T> updates)
         {
             // ensure that value is not null, otherway exception is throw, use emtpy string instead
-            return updates.Where(c=>c.Value != null).Select(s => new HashEntry(s.Key, s.Value.ToString() )).ToArray();
+            return updates.Where(c => c.Value != null).Select(s => new HashEntry(s.Key, s.Value.ToString())).ToArray();
         }
 
         private RedisValue[] TransformExpressionIntoRedisValues(params Expression<Func<T, object>>[] properties)
         {
-            return properties.Select(c=> (RedisValue) c.GetPropertyName()).ToArray();
+            return properties.Select(c => (RedisValue)c.GetPropertyName()).ToArray();
         }
 
         private RedisValue[] ObjectPropertyNames
@@ -185,7 +182,7 @@ namespace STRHM.Repositories
                 else
                     dictionary.Add(properties[i], values[i]);
             }
-            
+
             return dictionary;
         }
 

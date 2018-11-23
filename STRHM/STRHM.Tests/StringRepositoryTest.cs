@@ -17,10 +17,7 @@ namespace STRHM.Tests
         public StringRepositoryTest()
         {
             _bookRepository = new BookRepository(
-                new RedisConnection(new ConfigurationOptions()
-                {
-                    EndPoints = { "localhost:6379" }
-                }), 
+                new RedisConnection("localhost:6379"),
                 new StronglyTypedRedisNewtonsoftSerializer(),  
                 new RedisHashSetOptions()
                     {
