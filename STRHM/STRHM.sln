@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "STRHM", "STRHM\STRHM.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "STRHM.Serialization.NewtonsoftJson", "STRHM.Serialization.NewtonsoftJson\STRHM.Serialization.NewtonsoftJson.csproj", "{CE641A08-F36F-4FC0-9BC8-B6231DCB85FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STRHM.Tests", "STRHM.Tests\STRHM.Tests.csproj", "{0C540D79-010D-4D6B-AD28-96176A97BC43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "STRHM.Tests", "STRHM.Tests\STRHM.Tests.csproj", "{0C540D79-010D-4D6B-AD28-96176A97BC43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

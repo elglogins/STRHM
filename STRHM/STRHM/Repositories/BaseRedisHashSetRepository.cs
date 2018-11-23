@@ -127,8 +127,7 @@ namespace STRHM.Repositories
                     var propertyValue = objectProperty.GetValue(obj, null);
                     // avoid persisting "" value as a json object, issues deserializing
                     if (propertyValue != null)
-                        value = Serializer.Serialize(objectProperty.GetValue(obj, null) ?? String.Empty,
-                            ConfigurationOptions.DateTimeSerializationFormat);
+                        value = Serializer.Serialize(objectProperty.GetValue(obj, null) ?? String.Empty);
                 }
                 else
                     value = (objectProperty.GetValue(obj, null) ?? String.Empty).ToString();
@@ -168,8 +167,8 @@ namespace STRHM.Repositories
                     expandoDict[property.Name] = redisValue.ToString();
             }
 
-            string serializedObject = Serializer.Serialize(obj, ConfigurationOptions.DateTimeSerializationFormat);
-            return Serializer.Deserialize<T>(serializedObject, ConfigurationOptions.DateTimeSerializationFormat);
+            string serializedObject = Serializer.Serialize(obj);
+            return Serializer.Deserialize<T>(serializedObject);
         }
 
         private StronglyTypedDictionary<T> Map(RedisValue[] values, params Expression<Func<T, object>>[] properties)

@@ -6,24 +6,28 @@ namespace STRHM.Serialization.NewtonsoftJson
 {
     public class StronglyTypedRedisNewtonsoftSerializer : IStronglyTypedRedisSerializer
     {
-        public string Serialize(object obj)
+        private readonly IsoDateTimeConverter _dateTimeConverter;
+
+        public StronglyTypedRedisNewtonsoftSerializer(IsoDateTimeConverter dateTimeConverter)
         {
-            return JsonConvert.SerializeObject(obj);
+            _dateTimeConverter = dateTimeConverter;
         }
 
-        public string Serialize(object obj, string dateTimeFormat)
+        public StronglyTypedRedisNewtonsoftSerializer()
         {
-            return JsonConvert.SerializeObject(obj, new IsoDateTimeConverter { DateTimeFormat = dateTimeFormat} );
+            //DateTime.UtcNow.ToString("s")
+            _dateTimeConverter = new IsoDateTimeConverter { };
+        }
+
+
+        public string Serialize(object obj)
+        {
+            return JsonConvert.SerializeObject(obj, _dateTimeConverter);
         }
 
         public T Deserialize<T>(string value)
         {
-            return JsonConvert.DeserializeObject<T>(value);
-        }
-
-        public T Deserialize<T>(string value, string dateTimeFormat)
-        {
-            return JsonConvert.DeserializeObject<T>(value, new IsoDateTimeConverter { DateTimeFormat = dateTimeFormat });
+            return JsonConvert.DeserializeObject<T>(value, _dateTimeConverter);
         }
     }
 }
