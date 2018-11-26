@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 
 namespace STRHM.Repositories
 {
+
     public abstract class BaseRedisHashSetRepository<T>
         where T : class
     {

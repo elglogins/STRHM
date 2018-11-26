@@ -1,14 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
-    <Version>1.0.1</Version>
+    <TargetFrameworks>net461;netcoreapp2.0;netcoreapp2.1</TargetFrameworks>
+    <Version>1.0.2</Version>
     <Description>Newtonsoft.Json serializer for STRHM ( Strongly typed implementation for Redis StackExchange client, when using hashset functionality ).</Description>
     <PackageProjectUrl>https://github.com/elglogins/STRHM</PackageProjectUrl>
     <RepositoryUrl>https://github.com/elglogins/STRHM</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/elglogins/STRHM/master/STRHM/icon.png</PackageIconUrl>
     <Authors>Elgars Logins</Authors>
     <PackageTags>redis, strhm, json, newtonsoft</PackageTags>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
+    <PackageReleaseNotes>Target frameworks updated</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

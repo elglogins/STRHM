@@ -10,6 +10,8 @@ namespace STRHM.Extensions
                 return false;
 
             // cleanup value content
+            //
+            //
             var cleanedValue = value.Replace("\"", "").Trim();
 
             // if starts and ends with matching Parentes, then we assume
